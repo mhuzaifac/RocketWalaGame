@@ -13,6 +13,11 @@ public class PlayerRocket : MonoBehaviour
     [SerializeField] private float rotationForce;
     [SerializeField] private float maxVelocity;
 
+    [Header("Particles")]
+    [SerializeField] private ParticleSystem ThrustParticle;
+    [SerializeField] private ParticleSystem leftThrustParticle;
+    [SerializeField] private ParticleSystem rightThrustParticle;
+
 
 
 
@@ -21,7 +26,6 @@ public class PlayerRocket : MonoBehaviour
 
     private void Awake()
     {
-        Debug.Log("hhh");
         _rb = GetComponent<Rigidbody>();
 
         
@@ -72,10 +76,23 @@ public class PlayerRocket : MonoBehaviour
 
     private void ProcessRotation()
     {
-        float dir = rotationAction.ReadValue<float>();
+        float dir = -rotationAction.ReadValue<float>();
 
-        _rb.AddRelativeTorque(-1 * dir * transform.forward * torque );
-        _rb.AddRelativeForce(dir * transform.right * rotationForce, ForceMode.Force);
+        _rb.AddRelativeTorque( dir * transform.forward * torque * Time.deltaTime );
+        _rb.AddRelativeForce(-dir * transform.right * rotationForce * Time.deltaTime, ForceMode.Force);
+
+        switch (dir)
+        {
+            case -1:
+                rightThrustParticle.Play(); break;
+            case 1:
+                leftThrustParticle.Play(); break;
+            default:
+                rightThrustParticle.Stop();
+                leftThrustParticle.Stop();
+                break;
+        }
+
         
 
 
@@ -87,8 +104,12 @@ public class PlayerRocket : MonoBehaviour
     {
         if (thrust.IsPressed() && _rb.linearVelocity.y < maxVelocity)
         {
-            
+            ThrustParticle.Play();
             _rb.AddRelativeForce(thrustForce * Vector3.up * Time.deltaTime);
+        }
+        else
+        {
+            ThrustParticle.Stop();
         }
 
         //Debug.Log(_rb.linearVelocity.magnitude);
